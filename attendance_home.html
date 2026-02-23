@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dochádzka – Domáci</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1>DOMÁCI</h1>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Meno</th>
+          <th>Číslo</th>
+        </tr>
+      </thead>
+      <tbody id="playersBody">
+        </tbody>
+    </table>
+  </div>
+
+  <button id="continueBtn" class="action-btn" disabled>
+    Pokračovať
+  </button>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const homeTeamId = params.get("home");
+    const awayTeamId = params.get("away");
+    const matchId = params.get("match_id"); // <--- GET MATCH ID
+
+    const tbody = document.getElementById("playersBody");
+    const continueBtn = document.getElementById("continueBtn");
+
+    function updateButtonState() {
+      const checked = document.querySelectorAll('.player-checkbox:checked');
+      continueBtn.disabled = checked.length < 5;
+    }
+
+    async function loadPlayers() {
+      try {
+          const response = await fetch(`https://Kaneki21.pythonanywhere.com/players/${homeTeamId}`);
+          const players = await response.json();
+          tbody.innerHTML = "";
+          players.forEach(player => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td><input type="checkbox" class="player-checkbox" data-id="${player.id}"></td>
+              <td>${player.name}</td>
+              <td><input type="number" class="player-number" value="${player.number}" style="width: 60px; font-size: 18px; padding: 5px;"></td>
+            `;
+            tbody.appendChild(tr);
+          });
+          document.querySelectorAll(".player-checkbox").forEach(cb => cb.addEventListener("change", updateButtonState));
+      } catch (err) { console.error(err); alert("Chyba pri načítaní hráčov."); }
+    }
+
+    continueBtn.addEventListener("click", () => {
+        const selectedPlayers = [];
+        document.querySelectorAll(".player-checkbox:checked").forEach(cb => {
+            const row = cb.closest("tr");
+            const pId = cb.getAttribute("data-id");
+            const pNumber = row.querySelector(".player-number").value;
+            selectedPlayers.push({ player_id: parseInt(pId), number: parseInt(pNumber) });
+        });
+
+        localStorage.setItem("homeRoster", JSON.stringify(selectedPlayers));
+
+        // PASS MATCH_ID TO NEXT PAGE
+        window.location.href = `attendance_away.html?home=${homeTeamId}&away=${awayTeamId}&match_id=${matchId}`;
+    });
+
+    loadPlayers();
+</script>
+</body>
+</html>

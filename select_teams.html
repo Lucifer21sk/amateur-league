@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Výber Zápasu</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+      body { text-align: center; background: #f4f7f6; }
+      h1 { color: #244b94; margin-top: 30px; }
+      
+      .match-card {
+          background: white;
+          padding: 20px;
+          margin: 15px auto;
+          border-radius: 12px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+          max-width: 600px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-left: 6px solid #244b94;
+          text-align: left;
+      }
+      
+      .match-info { flex-grow: 1; }
+      .date-badge { font-size: 0.85em; color: #666; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+      .teams-vs { font-size: 1.4em; font-weight: bold; color: #333; }
+      
+      .start-btn {
+          background-color: #28a745;
+          color: white;
+          text-decoration: none;
+          padding: 12px 20px;
+          font-size: 1.1em;
+          border-radius: 8px;
+          font-weight: bold;
+          transition: 0.2s;
+          border: none;
+          cursor: pointer;
+      }
+      .start-btn:hover { background-color: #218838; transform: scale(1.05); }
+
+      .no-matches { color: #999; margin-top: 50px; font-size: 1.2em; }
+  </style>
+</head>
+<body>
+
+  <h1>Dnešné Zápasy</h1>
+  
+  <div id="matchesContainer">Načítavam...</div>
+
+<script>
+    const API_BASE = "https://Kaneki21.pythonanywhere.com";
+
+    async function loadMatches() {
+        try {
+            const res = await fetch(`${API_BASE}/matches`);
+            const matches = await res.json();
+            const container = document.getElementById("matchesContainer");
+            
+            // 1. Get Today's Date in YYYY-MM-DD format
+            const today = new Date().toISOString().split('T')[0];
+
+            // 2. Filter: Only matches for TODAY that are NOT finished
+            // 3. Sort: Compare the 'time' property to put earliest first
+            const todayMatches = matches
+                .filter(m => m.date === today && !m.is_finished)
+                .sort((a, b) => a.time.localeCompare(b.time));
+
+            container.innerHTML = "";
+            
+            if (todayMatches.length === 0) {
+                container.innerHTML = `
+                    <div class='no-matches'>
+                        Dnes nie sú naplánované žiadne zápasy.<br>
+                        <small style="color:#888; font-size:0.6em;">Dátum: ${today}</small>
+                    </div>`;
+                return;
+            }
+
+            todayMatches.forEach(m => {
+                container.innerHTML += `
+                    <div class="match-card">
+                        <div class="match-info">
+                            <div class="date-badge">🕒 DNES | ${m.time}</div>
+                            <div class="teams-vs">${m.home_team} vs ${m.away_team}</div>
+                        </div>
+                        <a href="attendance_home.html?match_id=${m.id}&home=${m.home_team_id}&away=${m.away_team_id}" class="start-btn">
+                            Štart ►
+                        </a>
+                    </div>
+                `;
+            });
+        } catch (err) {
+            document.getElementById("matchesContainer").innerHTML = "Chyba pripojenia.";
+            console.error(err);
+        }
+    }
+    loadMatches();
+  </script>
+</body>
+</html>
