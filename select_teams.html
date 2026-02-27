@@ -23,9 +23,20 @@
       }
       
       .match-info { flex-grow: 1; }
-      .date-badge { font-size: 0.85em; color: #666; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+      .date-badge { font-size: 0.85em; color: #666; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; display: flex; align-items: center; gap: 8px;}
       .teams-vs { font-size: 1.4em; font-weight: bold; color: #333; }
       
+      /* Nový štýl pre Ligu (IAL1 / IAL2) */
+      .cat-badge {
+          background-color: #244b94;
+          color: white;
+          padding: 3px 8px;
+          border-radius: 5px;
+          font-size: 0.9em;
+      }
+      /* Ak by si chcel odlíšiť farbu pre IAL2, nastavíme dynamickú zmenu nižšie v JS */
+      .cat-ial2 { background-color: #d90f23; } 
+
       .start-btn {
           background-color: #28a745;
           color: white;
@@ -58,13 +69,10 @@
             const matches = await res.json();
             const container = document.getElementById("matchesContainer");
             
-            // 1. Get Today's Date in YYYY-MM-DD format
             const today = new Date().toISOString().split('T')[0];
 
-            // 2. Filter: Only matches for TODAY that are NOT finished
-            // 3. Sort: Compare the 'time' property to put earliest first
             const todayMatches = matches
-                .filter(m => m.date === today && !m.is_finished)
+                .filter(m => /* m.date === today  && */ !m.is_finished) //temporary disable date filter for testing
                 .sort((a, b) => a.time.localeCompare(b.time));
 
             container.innerHTML = "";
@@ -79,10 +87,16 @@
             }
 
             todayMatches.forEach(m => {
+                // Dynamická farba pre IAL1 (Modrá) a IAL2 (Červená)
+                const catClass = m.category === "IAL2" ? "cat-ial2" : "";
+                
                 container.innerHTML += `
                     <div class="match-card">
                         <div class="match-info">
-                            <div class="date-badge">🕒 DNES | ${m.time}</div>
+                            <div class="date-badge">
+                                <span class="cat-badge ${catClass}">${m.category}</span>
+                                🕒 DNES | ${m.time}
+                            </div>
                             <div class="teams-vs">${m.home_team} vs ${m.away_team}</div>
                         </div>
                         <a href="attendance_home.html?match_id=${m.id}&home=${m.home_team_id}&away=${m.away_team_id}" class="start-btn">
