@@ -72,7 +72,7 @@
             const today = new Date().toISOString().split('T')[0];
 
             const todayMatches = matches
-                .filter(m => /* m.date === today  && */ !m.is_finished) //temporary disable date filter for testing
+                .filter(m => m.date === today &&  !m.is_finished)
                 .sort((a, b) => a.time.localeCompare(b.time));
 
             container.innerHTML = "";
